@@ -9,6 +9,8 @@ COLOR_IMPAGO = "#C62828"
 COLOR_PAGADA = "#2E7D32"
 COLOR_NULA = "#6C757D"
 
+TEMPLATE = "plotly_dark"
+
 
 def chart_facturacion_mensual(df: pd.DataFrame):
     plot_df = (
@@ -28,7 +30,7 @@ def chart_facturacion_mensual(df: pd.DataFrame):
     fig.update_layout(
         xaxis_title="Año-Mes",
         yaxis_title="Monto",
-        template="plotly_white",
+        template=TEMPLATE,
         height=420,
     )
     return fig
@@ -54,7 +56,7 @@ def chart_top_clientes(df: pd.DataFrame, top_n: int = 10):
     fig.update_layout(
         xaxis_title="Monto",
         yaxis_title="Cliente",
-        template="plotly_white",
+        template=TEMPLATE,
         height=420,
         yaxis={"categoryorder": "total ascending"},
     )
@@ -80,7 +82,7 @@ def chart_facturacion_por_empresa(df: pd.DataFrame):
     fig.update_layout(
         xaxis_title="Monto",
         yaxis_title="Razón social",
-        template="plotly_white",
+        template=TEMPLATE,
         height=350,
         yaxis={"categoryorder": "total ascending"},
     )
@@ -110,7 +112,7 @@ def chart_estado(df: pd.DataFrame):
         hole=0.45,
     )
     fig.update_layout(
-        template="plotly_white",
+        template=TEMPLATE,
         height=350,
     )
     return fig
@@ -136,7 +138,7 @@ def chart_top_clientes_morosos(df: pd.DataFrame, top_n: int = 10):
     fig.update_layout(
         xaxis_title="Monto impago",
         yaxis_title="Cliente",
-        template="plotly_white",
+        template=TEMPLATE,
         height=420,
         yaxis={"categoryorder": "total ascending"},
     )
@@ -162,7 +164,7 @@ def chart_deuda_por_empresa(df: pd.DataFrame):
     fig.update_layout(
         xaxis_title="Monto impago",
         yaxis_title="Razón social",
-        template="plotly_white",
+        template=TEMPLATE,
         height=350,
         yaxis={"categoryorder": "total ascending"},
     )
@@ -181,20 +183,47 @@ def chart_aging_deuda(df: pd.DataFrame):
         labels=labels
     )
 
-    plot_df.groupby("rango_aging", as_index=False, observed=False)["MONTO"]
+    plot_df = (
+        plot_df.groupby("rango_aging", as_index=False, observed=False)["MONTO"]
+        .sum()
+    )
+
+    total = plot_df["MONTO"].sum()
+
+    if total > 0:
+        plot_df["PORCENTAJE"] = plot_df["MONTO"] / total
+    else:
+        plot_df["PORCENTAJE"] = 0
+
+    plot_df["ETIQUETA"] = plot_df.apply(
+        lambda row: f"{row['MONTO']/1_000_000:.1f}M ({row['PORCENTAJE']*100:.1f}%)",
+        axis=1
+    )
+
+    color_map = {
+        "0-30": "#F4A261",
+        "31-60": "#E76F51",
+        "61-90": "#D62828",
+        "90+": "#9B2226",
+    }
 
     fig = px.bar(
         plot_df,
         x="rango_aging",
         y="MONTO",
         title="Aging de deuda",
-        text_auto=".2s",
+        text="ETIQUETA",
+        color="rango_aging",
+        color_discrete_map=color_map,
     )
-    fig.update_traces(marker_color=COLOR_IMPAGO)
+
     fig.update_layout(
         xaxis_title="Rango de días",
         yaxis_title="Monto impago",
-        template="plotly_white",
+        template=TEMPLATE,
         height=350,
+        showlegend=False,
     )
+
+    fig.update_traces(textposition="outside")
     return fig
