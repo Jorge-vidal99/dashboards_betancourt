@@ -95,3 +95,18 @@ def load_facturas_consolidadas() -> pd.DataFrame:
 # -------------------------------
 def clear_cache() -> None:
     st.cache_data.clear()
+
+
+def get_data_file_timestamp(file_name: str):
+    path = DATA_DIR / file_name
+    if not path.exists():
+        return None
+    return path.stat().st_mtime
+
+
+def get_last_update_externas():
+    return get_data_file_timestamp("facturas_externas.parquet")
+
+
+def get_last_update_vencidas():
+    return get_data_file_timestamp("facturas_vencidas_impagas.parquet")

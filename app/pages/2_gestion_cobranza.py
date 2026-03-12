@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import streamlit as st
 
-from utils.loaders import load_facturas_externas, load_facturas_vencidas
+from utils.loaders import (
+    load_facturas_externas,
+    load_facturas_vencidas,
+    get_last_update_vencidas,
+)
 from utils.metrics import (
     kpi_monto_impago,
     kpi_facturas_impagas,
@@ -14,7 +18,13 @@ from utils.charts import (
     chart_deuda_por_empresa,
     chart_aging_deuda,
 )
-
+from utils.formatters import (
+    format_compact_currency_clp,
+    format_currency_clp,
+    format_number,
+    format_date_ddmmyyyy,
+    format_datetime_update,
+)
 
 st.set_page_config(page_title="Gestión de Cobranza", page_icon="💳", layout="wide")
 
@@ -23,6 +33,7 @@ st.caption("Seguimiento de deuda y facturas vencidas")
 
 df_externas = load_facturas_externas().copy()
 df_vencidas = load_facturas_vencidas().copy()
+last_update = get_last_update_vencidas()
 
 # -----------------------------
 # Filtros
@@ -47,7 +58,7 @@ with st.sidebar:
     clientes = sorted(df_externas["CLIENTE"].dropna().unique().tolist())
     clientes_sel = st.multiselect("Cliente", clientes, default=clientes, key="cobranza_cliente")
 
-# Aplicar filtros a externas
+# Aplicar filtros
 df_filtrado = df_externas[
     df_externas["anio"].isin(anios_sel)
     & df_externas["mes_nombre"].isin(meses_sel)
@@ -55,7 +66,6 @@ df_filtrado = df_externas[
     & df_externas["CLIENTE"].isin(clientes_sel)
 ].copy()
 
-# Aplicar filtros a vencidas
 df_vencidas_filtrado = df_vencidas[
     df_vencidas["anio"].isin(anios_sel)
     & df_vencidas["mes_nombre"].isin(meses_sel)
@@ -68,6 +78,19 @@ if df_filtrado.empty:
     st.stop()
 
 # -----------------------------
+# Encabezado ejecutivo
+# -----------------------------
+col_info_1, col_info_2 = st.columns([2, 1])
+
+with col_info_1:
+    st.markdown("**Sistema de Facturación y Cobranza | Módulo de Gestión de Cobranza**")
+
+with col_info_2:
+    st.markdown(
+        f"**Última actualización:** {format_datetime_update(last_update)}"
+    )
+
+# -----------------------------
 # KPIs
 # -----------------------------
 col1, col2, col3, col4 = st.columns(4)
@@ -75,25 +98,25 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric(
         "Monto impago",
-        f"${kpi_monto_impago(df_filtrado):,.0f}".replace(",", ".")
+        format_compact_currency_clp(kpi_monto_impago(df_filtrado))
     )
 
 with col2:
     st.metric(
         "Facturas impagas",
-        f"{kpi_facturas_impagas(df_filtrado):,}".replace(",", ".")
+        format_number(kpi_facturas_impagas(df_filtrado))
     )
 
 with col3:
     st.metric(
         "Clientes con deuda",
-        f"{kpi_clientes_con_deuda(df_filtrado):,}".replace(",", ".")
+        format_number(kpi_clientes_con_deuda(df_filtrado))
     )
 
 with col4:
     st.metric(
         "Monto vencido > 30 días",
-        f"${kpi_monto_vencido(df_vencidas_filtrado):,.0f}".replace(",", ".")
+        format_compact_currency_clp(kpi_monto_vencido(df_vencidas_filtrado))
     )
 
 st.markdown("---")
@@ -119,16 +142,16 @@ with col_g3:
 
 with col_g4:
     st.subheader("Resumen rápido")
-    st.write(f"**Registros vencidos:** {len(df_vencidas_filtrado):,}".replace(",", "."))
+    st.write(f"**Registros vencidos:** {format_number(len(df_vencidas_filtrado))}")
     st.write(
         f"**Monto promedio por factura vencida:** "
-        f"${df_vencidas_filtrado['MONTO'].mean():,.0f}".replace(",", ".")
+        f"{format_currency_clp(df_vencidas_filtrado['MONTO'].mean())}"
         if not df_vencidas_filtrado.empty
         else "$0"
     )
     st.write(
         f"**Máxima antigüedad:** "
-        f"{int(df_vencidas_filtrado['DIAS_TRANSCURRIDOS'].max())} días"
+        f"{format_number(df_vencidas_filtrado['DIAS_TRANSCURRIDOS'].max())} días"
         if not df_vencidas_filtrado.empty
         else "0 días"
     )
@@ -140,20 +163,26 @@ st.markdown("---")
 # -----------------------------
 st.subheader("Detalle de facturas impagas vencidas")
 
+detalle = df_vencidas_filtrado[
+    [
+        "N_FACTURA",
+        "FECHA_EMISION",
+        "CLIENTE",
+        "RUT",
+        "CARGA_O_CONCEPTO",
+        "MONTO",
+        "ESTADO",
+        "RAZON_SOCIAL",
+        "DIAS_TRANSCURRIDOS",
+    ]
+].copy()
+
+detalle["FECHA_EMISION"] = format_date_ddmmyyyy(detalle["FECHA_EMISION"])
+detalle["MONTO"] = detalle["MONTO"].apply(format_currency_clp)
+detalle["DIAS_TRANSCURRIDOS"] = detalle["DIAS_TRANSCURRIDOS"].apply(format_number)
+
 st.dataframe(
-    df_vencidas_filtrado[
-        [
-            "N_FACTURA",
-            "FECHA_EMISION",
-            "CLIENTE",
-            "RUT",
-            "CARGA_O_CONCEPTO",
-            "MONTO",
-            "ESTADO",
-            "RAZON_SOCIAL",
-            "DIAS_TRANSCURRIDOS",
-        ]
-    ].sort_values(["DIAS_TRANSCURRIDOS", "MONTO"], ascending=[False, False]),
+    detalle.sort_values(["DIAS_TRANSCURRIDOS"], ascending=[False]),
     width="stretch",
     hide_index=True,
 )

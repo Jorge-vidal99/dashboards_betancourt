@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
-from utils.loaders import load_facturas_externas
+from utils.loaders import load_facturas_externas, get_last_update_externas
 from utils.metrics import (
     kpi_facturacion_total,
     kpi_facturas_totales,
@@ -15,7 +16,13 @@ from utils.charts import (
     chart_facturacion_por_empresa,
     chart_estado,
 )
-
+from utils.formatters import (
+    format_compact_currency_clp,
+    format_currency_clp,
+    format_number,
+    format_date_ddmmyyyy,
+    format_datetime_update,
+)
 
 st.set_page_config(page_title="Resumen Financiero", page_icon="📈", layout="wide")
 
@@ -23,6 +30,7 @@ st.title("Resumen Financiero")
 st.caption("Visión ejecutiva de facturación externa")
 
 df = load_facturas_externas().copy()
+last_update = get_last_update_externas()
 
 # -----------------------------
 # Filtros
@@ -50,9 +58,7 @@ with st.sidebar:
     clientes = sorted(df["CLIENTE"].dropna().unique().tolist())
     clientes_sel = st.multiselect("Cliente", clientes, default=clientes)
 
-# -----------------------------
 # Aplicar filtros
-# -----------------------------
 df_filtrado = df[
     df["anio"].isin(anios_sel)
     & df["mes_nombre"].isin(meses_sel)
@@ -61,9 +67,18 @@ df_filtrado = df[
     & df["CLIENTE"].isin(clientes_sel)
 ].copy()
 
-if df_filtrado.empty:
-    st.warning("No hay datos para la combinación de filtros seleccionada.")
-    st.stop()
+# -----------------------------
+# Encabezado ejecutivo
+# -----------------------------
+col_info_1, col_info_2 = st.columns([2, 1])
+
+with col_info_1:
+    st.markdown("**Sistema de Facturación y Cobranza | Transportes Betancourt**")
+
+with col_info_2:
+    st.markdown(
+        f"**Última actualización:** {format_datetime_update(last_update)}"
+    )
 
 # -----------------------------
 # KPIs
@@ -73,25 +88,25 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric(
         "Facturación externa",
-        f"${kpi_facturacion_total(df_filtrado):,.0f}".replace(",", ".")
+        format_compact_currency_clp(kpi_facturacion_total(df_filtrado))
     )
 
 with col2:
     st.metric(
         "Facturas externas",
-        f"{kpi_facturas_totales(df_filtrado):,}".replace(",", ".")
+        format_number(kpi_facturas_totales(df_filtrado))
     )
 
 with col3:
     st.metric(
         "Monto impago externo",
-        f"${kpi_monto_impago(df_filtrado):,.0f}".replace(",", ".")
+        format_compact_currency_clp(kpi_monto_impago(df_filtrado))
     )
 
 with col4:
     st.metric(
         "Facturas impagas externas",
-        f"{kpi_facturas_impagas(df_filtrado):,}".replace(",", ".")
+        format_number(kpi_facturas_impagas(df_filtrado))
     )
 
 st.markdown("---")
@@ -122,23 +137,29 @@ with col_g4:
 st.markdown("---")
 
 # -----------------------------
-# Detalle
+# Tabla detalle
 # -----------------------------
 with st.expander("Ver detalle de datos filtrados"):
+    detalle = df_filtrado[
+        [
+            "N_FACTURA",
+            "FECHA_EMISION",
+            "CLIENTE",
+            "RUT",
+            "CARGA_O_CONCEPTO",
+            "MONTO",
+            "ESTADO",
+            "RAZON_SOCIAL",
+            "DIAS_TRANSCURRIDOS",
+        ]
+    ].copy()
+
+    detalle["FECHA_EMISION"] = format_date_ddmmyyyy(detalle["FECHA_EMISION"])
+    detalle["MONTO"] = detalle["MONTO"].apply(format_currency_clp)
+    detalle["DIAS_TRANSCURRIDOS"] = detalle["DIAS_TRANSCURRIDOS"].apply(format_number)
+
     st.dataframe(
-        df_filtrado[
-            [
-                "N_FACTURA",
-                "FECHA_EMISION",
-                "CLIENTE",
-                "RUT",
-                "CARGA_O_CONCEPTO",
-                "MONTO",
-                "ESTADO",
-                "RAZON_SOCIAL",
-                "DIAS_TRANSCURRIDOS",
-            ]
-        ],
+        detalle,
         width="stretch",
         hide_index=True,
     )
