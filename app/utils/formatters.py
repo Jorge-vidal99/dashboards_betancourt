@@ -38,7 +38,12 @@ def format_date_ddmmyyyy(series: pd.Series) -> pd.Series:
 
 
 def format_datetime_update(value) -> str:
-    ts = pd.to_datetime(value, errors="coerce")
+    if value is None or pd.isna(value):
+        return "-"
+
+    ts = pd.to_datetime(value, unit="s", errors="coerce")
+
     if pd.isna(ts):
         return "-"
+
     return ts.strftime("%d-%m-%Y %H:%M")
