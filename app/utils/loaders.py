@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import pandas as pd
 import streamlit as st
 
@@ -8,10 +9,7 @@ import streamlit as st
 # -------------------------------
 # Ruta base del proyecto
 # -------------------------------
-# .../REPORTE
 BASE_DIR = Path(__file__).resolve().parents[2]
-
-# Carpeta de datos procesados
 DATA_DIR = BASE_DIR / "data_processed"
 
 
@@ -35,14 +33,13 @@ MESES_ES = {
 
 
 # -------------------------------
-# Preparar columnas
+# Preparación de columnas
 # -------------------------------
 def _prepare_dates(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     if "FECHA_EMISION" in df.columns:
         df["FECHA_EMISION"] = pd.to_datetime(df["FECHA_EMISION"], errors="coerce")
-
         df["anio"] = df["FECHA_EMISION"].dt.year.astype("Int64")
         df["mes_num"] = df["FECHA_EMISION"].dt.month.astype("Int64")
         df["mes_nombre"] = df["mes_num"].map(MESES_ES)
@@ -60,7 +57,7 @@ def _prepare_dates(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # -------------------------------
-# LOADERS
+# Loaders principales
 # -------------------------------
 @st.cache_data(show_spinner=False)
 def load_facturas_externas() -> pd.DataFrame:
@@ -91,7 +88,7 @@ def load_facturas_consolidadas() -> pd.DataFrame:
 
 
 # -------------------------------
-# Limpiar caché
+# Utilidades de actualización
 # -------------------------------
 def clear_cache() -> None:
     st.cache_data.clear()
