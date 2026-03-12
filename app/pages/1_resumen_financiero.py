@@ -9,6 +9,7 @@ from utils.metrics import (
     kpi_facturas_totales,
     kpi_monto_impago,
     kpi_facturas_impagas,
+    kpi_tasa_mora,
 )
 from utils.charts import (
     chart_facturacion_mensual,
@@ -22,6 +23,7 @@ from utils.formatters import (
     format_number,
     format_date_ddmmyyyy,
     format_datetime_update,
+    format_percent
 )
 
 st.set_page_config(page_title="Resumen Financiero", page_icon="📈", layout="wide")
@@ -83,7 +85,7 @@ with col_info_2:
 # -----------------------------
 # KPIs
 # -----------------------------
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
     st.metric(
@@ -108,6 +110,11 @@ with col4:
         "Facturas impagas externas",
         format_number(kpi_facturas_impagas(df_filtrado))
     )
+with col5:
+    st.metric(
+        "Tasa de mora",
+        format_percent(kpi_tasa_mora(df_filtrado))
+    )   
 
 st.markdown("---")
 

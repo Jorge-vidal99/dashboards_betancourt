@@ -25,3 +25,11 @@ def kpi_clientes_con_deuda(df: pd.DataFrame) -> int:
 
 def kpi_monto_vencido(df_vencidas: pd.DataFrame) -> float:
     return float(df_vencidas["MONTO"].sum())
+def kpi_tasa_mora(df):
+    facturacion_total = kpi_facturacion_total(df)
+    monto_impago = kpi_monto_impago(df)
+
+    if facturacion_total in [0, None]:
+        return 0
+
+    return monto_impago / facturacion_total

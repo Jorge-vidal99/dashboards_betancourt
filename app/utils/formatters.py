@@ -47,3 +47,8 @@ def format_datetime_update(value) -> str:
         return "-"
 
     return ts.strftime("%d-%m-%Y %H:%M")
+
+def format_percent(value: float | int | None) -> str:
+    if value is None or pd.isna(value):
+        return "0,00%"
+    return f"{value * 100:.2f}%".replace(".", ",")
