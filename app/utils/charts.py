@@ -201,3 +201,29 @@ def chart_aging_deuda(df: pd.DataFrame):
 
     fig.update_traces(textposition="outside")
     return fig
+
+
+def chart_deuda_por_empresa(df: pd.DataFrame):
+    plot_df = (
+        df.groupby("RAZON_SOCIAL", as_index=False)["MONTO"]
+        .sum()
+        .sort_values("MONTO", ascending=False)
+    )
+
+    fig = px.bar(
+        plot_df,
+        x="MONTO",
+        y="RAZON_SOCIAL",
+        orientation="h",
+        title="Deuda por empresa emisora",
+        text_auto=".2s",
+    )
+    fig.update_traces(marker_color=COLOR_IMPAGO)
+    fig.update_layout(
+        xaxis_title="Monto impago",
+        yaxis_title="Razón social",
+        template=TEMPLATE,
+        height=350,
+        yaxis={"categoryorder": "total ascending"},
+    )
+    return fig
