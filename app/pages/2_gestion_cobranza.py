@@ -12,11 +12,14 @@ from utils.metrics import (
     kpi_facturas_impagas,
     kpi_clientes_con_deuda,
     kpi_monto_vencido,
+    resumen_riesgo_clientes,
 )
 from utils.charts import (
     chart_top_clientes_morosos,
     chart_deuda_por_empresa,
     chart_aging_deuda,
+    chart_resumen_riesgo_clientes,
+    chart_top_clientes_criticos,
 )
 from utils.formatters import (
     format_compact_currency_clp,
@@ -85,7 +88,7 @@ df_vencidas_filtrado = df_vencidas[
     & df_vencidas["CLIENTE"].isin(clientes_sel)
 ].copy()
 
-# Todas las impagas, incluyendo no vencidas, para aging
+# Todas las impagas, incluyendo no vencidas, para aging y semáforo
 df_impagas_filtrado = df_filtrado[
     df_filtrado["ESTADO"] == "IMPAGA"
 ].copy()
@@ -139,7 +142,7 @@ with col4:
 st.markdown("---")
 
 # -----------------------------
-# Gráficos
+# Gráficos principales
 # -----------------------------
 col_g1, col_g2 = st.columns([1.1, 1])
 
@@ -151,7 +154,6 @@ with col_g2:
     st.subheader("Aging de facturas impagas")
 
     df_aging = df_impagas_filtrado.copy()
-
     fig_aging = chart_aging_deuda(df_aging)
     st.plotly_chart(fig_aging, width="stretch")
 
@@ -180,7 +182,53 @@ with col_g4:
 st.markdown("---")
 
 # -----------------------------
-# Tabla detalle
+# Semáforo de riesgo de clientes
+# -----------------------------
+st.subheader("Semáforo de riesgo de clientes")
+
+df_riesgo = resumen_riesgo_clientes(df_filtrado)
+
+col_r1, col_r2 = st.columns([1, 1.2])
+
+with col_r1:
+    fig_riesgo = chart_resumen_riesgo_clientes(df_riesgo)
+    st.plotly_chart(fig_riesgo, width="stretch")
+
+with col_r2:
+    fig_criticos = chart_top_clientes_criticos(df_riesgo, top_n=10)
+    st.plotly_chart(fig_criticos, width="stretch")
+
+if not df_riesgo.empty:
+    st.markdown("### Detalle de clientes por riesgo")
+
+    riesgo_detalle = df_riesgo[
+        [
+            "CLIENTE",
+            "MONTO_FACTURADO",
+            "MONTO_IMPAGO",
+            "FACTURAS_IMPAGAS",
+            "MAX_DIAS",
+            "TASA_IMPAGO",
+            "ICONO_RIESGO",
+        ]
+    ].copy()
+
+    riesgo_detalle["MONTO_FACTURADO"] = riesgo_detalle["MONTO_FACTURADO"].apply(format_currency_clp)
+    riesgo_detalle["MONTO_IMPAGO"] = riesgo_detalle["MONTO_IMPAGO"].apply(format_currency_clp)
+    riesgo_detalle["FACTURAS_IMPAGAS"] = riesgo_detalle["FACTURAS_IMPAGAS"].apply(format_number)
+    riesgo_detalle["MAX_DIAS"] = riesgo_detalle["MAX_DIAS"].apply(lambda x: f"{format_number(x)} días")
+    riesgo_detalle["TASA_IMPAGO"] = riesgo_detalle["TASA_IMPAGO"].apply(lambda x: f"{x*100:.2f}%".replace(".", ","))
+
+    st.dataframe(
+        riesgo_detalle,
+        width="stretch",
+        hide_index=True,
+    )
+
+st.markdown("---")
+
+# -----------------------------
+# Tabla detalle de vencidas
 # -----------------------------
 st.subheader("Detalle de facturas impagas vencidas")
 

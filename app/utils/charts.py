@@ -227,3 +227,88 @@ def chart_aging_deuda(df: pd.DataFrame):
 
     fig.update_traces(textposition="outside")
     return fig
+
+
+def chart_resumen_riesgo_clientes(df_resumen: pd.DataFrame):
+    if df_resumen.empty:
+        return px.bar(title="Clientes por nivel de riesgo")
+
+    plot_df = (
+        df_resumen.groupby("NIVEL_RIESGO", as_index=False)
+        .agg(
+            CLIENTES=("CLIENTE", "nunique"),
+            MONTO_IMPAGO=("MONTO_IMPAGO", "sum"),
+        )
+    )
+
+    orden = ["Alto", "Medio", "Bajo"]
+    plot_df["NIVEL_RIESGO"] = pd.Categorical(
+        plot_df["NIVEL_RIESGO"],
+        categories=orden,
+        ordered=True
+    )
+    plot_df = plot_df.sort_values("NIVEL_RIESGO")
+
+    color_map = {
+        "Alto": "#D62828",
+        "Medio": "#F4A261",
+        "Bajo": "#2E7D32",
+    }
+
+    plot_df["ETIQUETA"] = plot_df.apply(
+        lambda row: f"{int(row['CLIENTES'])} clientes | ${row['MONTO_IMPAGO']/1_000_000:.1f}M",
+        axis=1
+    )
+
+    fig = px.bar(
+        plot_df,
+        x="NIVEL_RIESGO",
+        y="CLIENTES",
+        color="NIVEL_RIESGO",
+        color_discrete_map=color_map,
+        title="Clientes por nivel de riesgo",
+        text="ETIQUETA",
+    )
+
+    fig.update_layout(
+        xaxis_title="Nivel de riesgo",
+        yaxis_title="Cantidad de clientes",
+        template=TEMPLATE,
+        height=350,
+        showlegend=False,
+    )
+    fig.update_traces(textposition="outside")
+    return fig
+
+
+def chart_top_clientes_criticos(df_resumen: pd.DataFrame, top_n: int = 10):
+    if df_resumen.empty:
+        return px.bar(title="Top clientes críticos")
+
+    plot_df = (
+        df_resumen[df_resumen["NIVEL_RIESGO"] == "Alto"]
+        .sort_values("MONTO_IMPAGO", ascending=False)
+        .head(top_n)
+    )
+
+    if plot_df.empty:
+        return px.bar(title="Top clientes críticos")
+
+    fig = px.bar(
+        plot_df,
+        x="MONTO_IMPAGO",
+        y="CLIENTE",
+        orientation="h",
+        title=f"Top {top_n} clientes críticos",
+        text_auto=".2s",
+    )
+
+    fig.update_traces(marker_color="#D62828")
+    fig.update_layout(
+        xaxis_title="Monto impago",
+        yaxis_title="Cliente",
+        template=TEMPLATE,
+        height=420,
+        yaxis={"categoryorder": "total ascending"},
+    )
+    return fig
