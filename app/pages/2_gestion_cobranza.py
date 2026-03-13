@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pandas as pd
 import streamlit as st
 
 from utils.loaders import (
@@ -86,7 +85,7 @@ df_vencidas_filtrado = df_vencidas[
     & df_vencidas["CLIENTE"].isin(clientes_sel)
 ].copy()
 
-# Para el aging: todas las IMPAGAS, incluyendo las no vencidas
+# Todas las impagas, incluyendo no vencidas, para aging
 df_impagas_filtrado = df_filtrado[
     df_filtrado["ESTADO"] == "IMPAGA"
 ].copy()
@@ -152,20 +151,6 @@ with col_g2:
     st.subheader("Aging de facturas impagas")
 
     df_aging = df_impagas_filtrado.copy()
-
-    bins = [-1, 30, 60, 90, 99999]
-    labels = ["0-30", "31-60", "61-90", "90+"]
-
-    df_aging["rango_aging"] = pd.cut(
-        df_aging["DIAS_TRANSCURRIDOS"],
-        bins=bins,
-        labels=labels
-    )
-
-    df_aging = (
-        df_aging.groupby("rango_aging", as_index=False)["MONTO"]
-        .sum()
-    )
 
     fig_aging = chart_aging_deuda(df_aging)
     st.plotly_chart(fig_aging, width="stretch")
