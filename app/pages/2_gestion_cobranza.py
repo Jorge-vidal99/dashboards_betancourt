@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from utils.loaders import (
@@ -53,12 +54,24 @@ with st.sidebar:
     meses_sel = st.multiselect("Mes", meses, default=meses, key="cobranza_mes")
 
     empresas = sorted(df_externas["RAZON_SOCIAL"].dropna().unique().tolist())
-    empresas_sel = st.multiselect("Razón social", empresas, default=empresas, key="cobranza_empresa")
+    empresas_sel = st.multiselect(
+        "Razón social",
+        empresas,
+        default=empresas,
+        key="cobranza_empresa"
+    )
 
     clientes = sorted(df_externas["CLIENTE"].dropna().unique().tolist())
-    clientes_sel = st.multiselect("Cliente", clientes, default=clientes, key="cobranza_cliente")
+    clientes_sel = st.multiselect(
+        "Cliente",
+        clientes,
+        default=clientes,
+        key="cobranza_cliente"
+    )
 
+# -----------------------------
 # Aplicar filtros
+# -----------------------------
 df_filtrado = df_externas[
     df_externas["anio"].isin(anios_sel)
     & df_externas["mes_nombre"].isin(meses_sel)
@@ -71,6 +84,11 @@ df_vencidas_filtrado = df_vencidas[
     & df_vencidas["mes_nombre"].isin(meses_sel)
     & df_vencidas["RAZON_SOCIAL"].isin(empresas_sel)
     & df_vencidas["CLIENTE"].isin(clientes_sel)
+].copy()
+
+# Para el aging: todas las IMPAGAS, incluyendo las no vencidas
+df_impagas_filtrado = df_filtrado[
+    df_filtrado["ESTADO"] == "IMPAGA"
 ].copy()
 
 if df_filtrado.empty:
@@ -131,7 +149,25 @@ with col_g1:
     st.plotly_chart(fig_morosos, width="stretch")
 
 with col_g2:
-    fig_aging = chart_aging_deuda(df_vencidas_filtrado)
+    st.subheader("Aging de facturas impagas")
+
+    df_aging = df_impagas_filtrado.copy()
+
+    bins = [-1, 30, 60, 90, 99999]
+    labels = ["0-30", "31-60", "61-90", "90+"]
+
+    df_aging["rango_aging"] = pd.cut(
+        df_aging["DIAS_TRANSCURRIDOS"],
+        bins=bins,
+        labels=labels
+    )
+
+    df_aging = (
+        df_aging.groupby("rango_aging", as_index=False)["MONTO"]
+        .sum()
+    )
+
+    fig_aging = chart_aging_deuda(df_aging)
     st.plotly_chart(fig_aging, width="stretch")
 
 col_g3, col_g4 = st.columns([1.2, 1])
