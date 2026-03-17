@@ -16,7 +16,7 @@ def run_step(title: str, args: list[str], log_file) -> None:
     log_file.write(header)
     log_file.flush()
 
-    # Ejecuta y “tee” a consola + archivo
+    # Ejecuta y escribe en consola + archivo
     proc = subprocess.Popen(
         args,
         cwd=str(BASE_DIR),
@@ -31,7 +31,7 @@ def run_step(title: str, args: list[str], log_file) -> None:
     proc.wait()
 
     if proc.returncode != 0:
-        msg = f"\n❌ Falló: {title} (exit code={proc.returncode})\n"
+        msg = f"\nERROR: Fallo {title} (exit code={proc.returncode})\n"
         print(msg, end="")
         log_file.write(msg)
         raise SystemExit(proc.returncode)
@@ -47,14 +47,14 @@ def main() -> None:
         f.write(f"Python: {py}\n")
         f.write(f"Base dir: {BASE_DIR}\n")
 
-        run_step("1) DESCARGA OneDrive → data_raw", [py, "scripts/download_facturas_2026.py"], f)
-        run_step("2) PROCESO data_raw → data_processed", [py, "scripts/process_facturas.py"], f)
+        run_step("1) DESCARGA OneDrive -> data_raw", [py, "scripts/download_facturas_2026.py"], f)
+        run_step("2) PROCESO data_raw -> data_processed", [py, "scripts/process_facturas.py"], f)
 
-        done = "\n✅ Pipeline completo OK.\n   - data_raw actualizado\n   - data_processed actualizado\n"
+        done = "\nPipeline completo OK.\n   - data_raw actualizado\n   - data_processed actualizado\n"
         print(done, end="")
         f.write(done)
 
-    print(f"\n🧾 Log guardado en: {log_path}")
+    print(f"\nLog guardado en: {log_path}")
 
 
 if __name__ == "__main__":
