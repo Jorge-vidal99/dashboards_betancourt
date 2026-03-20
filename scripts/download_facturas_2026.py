@@ -1,115 +1,158 @@
-import os
+from pathlib import Path
+import hashlib
 import requests
+
 from auth_onedrive import get_token
 
 
-GRAPH_ROOT_CHILDREN = "https://graph.microsoft.com/v1.0/me/drive/root/children"
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_RAW_DIR = BASE_DIR / "data_raw"
+DATA_RAW_DIR.mkdir(exist_ok=True)
+
+FOLDER_NAME = "FACTURAS_2026"
+GRAPH_ROOT = "https://graph.microsoft.com/v1.0"
 
 
-def graph_get(url: str, headers: dict) -> dict:
-    """GET a Graph con validación y mensajes claros."""
-    r = requests.get(url, headers=headers, timeout=60)
-
-    # Intentar parsear JSON siempre
-    try:
-        payload = r.json()
-    except Exception:
-        payload = {"_raw_text": r.text}
-
-    if r.status_code != 200:
-        print(" Error llamando a Microsoft Graph")
-        print("URL:", url)
-        print("Status:", r.status_code)
-        print("Respuesta:", payload)
-        raise SystemExit(1)
-
-    return payload
+def sha256_bytes(data: bytes) -> str:
+    h = hashlib.sha256()
+    h.update(data)
+    return h.hexdigest()
 
 
-def get_all_children(folder_children_url: str, headers: dict) -> list[dict]:
-    """Obtiene todos los hijos de una carpeta manejando paginación."""
-    items = []
-    url = folder_children_url
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def graph_get(url: str, headers: dict, params: dict | None = None) -> dict:
+    response = requests.get(url, headers=headers, params=params, timeout=60)
+    response.raise_for_status()
+    return response.json()
+
+
+def find_folder_id(headers: dict, folder_name: str) -> str:
+    print("1) Buscando carpeta en OneDrive root...")
+
+    url = f"{GRAPH_ROOT}/me/drive/root/children"
+    data = graph_get(url, headers=headers)
+
+    for item in data.get("value", []):
+        if item.get("name") == folder_name and "folder" in item:
+            folder_id = item["id"]
+            print(f"Carpeta encontrada: {folder_name}")
+            print(f"Folder ID: {folder_id}")
+            return folder_id
+
+    raise FileNotFoundError(f"No se encontro la carpeta '{folder_name}' en OneDrive.")
+
+
+def list_folder_items(headers: dict, folder_id: str) -> list[dict]:
+    print("2) Listando archivos de la carpeta...")
+
+    items: list[dict] = []
+    url = f"{GRAPH_ROOT}/me/drive/items/{folder_id}/children"
 
     while url:
-        payload = graph_get(url, headers)
-        batch = payload.get("value", [])
-        items.extend(batch)
-        url = payload.get("@odata.nextLink")  # si hay más páginas
+        response = requests.get(url, headers=headers, timeout=60)
+        response.raise_for_status()
+        data = response.json()
 
+        items.extend(data.get("value", []))
+        url = data.get("@odata.nextLink")
+
+    print(f"Items encontrados: {len(items)}")
     return items
 
 
-def main():
-    print("1) Obteniendo token...")
+def download_file_content(item: dict, headers: dict) -> bytes:
+    download_url = item.get("@microsoft.graph.downloadUrl")
+
+    if download_url:
+        response = requests.get(download_url, timeout=120)
+        response.raise_for_status()
+        return response.content
+
+    item_id = item["id"]
+    content_url = f"{GRAPH_ROOT}/me/drive/items/{item_id}/content"
+    response = requests.get(content_url, headers=headers, timeout=120)
+    response.raise_for_status()
+    return response.content
+
+
+def save_if_changed(file_name: str, content: bytes) -> tuple[bool, str]:
+    """
+    Guarda el archivo solo si el contenido es distinto.
+    Retorna:
+    - changed: bool
+    - status: str
+    """
+    output_path = DATA_RAW_DIR / file_name
+    new_hash = sha256_bytes(content)
+
+    if output_path.exists():
+        current_hash = sha256_file(output_path)
+
+        if current_hash == new_hash:
+            return False, "SIN_CAMBIOS"
+
+    with open(output_path, "wb") as f:
+        f.write(content)
+
+    return True, "ACTUALIZADO"
+
+
+def main() -> None:
+    print("INICIO DESCARGA ONEDRIVE -> DATA_RAW")
+    print("Obteniendo token...")
+
     token = get_token()
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
 
-    headers = {"Authorization": f"Bearer {token}"}
+    folder_id = find_folder_id(headers, FOLDER_NAME)
+    items = list_folder_items(headers, folder_id)
 
-    print("2) Buscando carpeta FACTURAS_2026 en el root...")
-    root_payload = graph_get(GRAPH_ROOT_CHILDREN, headers)
+    excel_items = [
+        item for item in items
+        if item.get("name", "").lower().endswith(".xlsx")
+    ]
 
-    root_items = root_payload.get("value", [])
-    folder_id = None
+    print(f"Archivos XLSX detectados: {len(excel_items)}")
 
-    for item in root_items:
-        # Solo carpetas tienen "folder"
-        if item.get("name") == "FACTURAS_2026" and "folder" in item:
-            folder_id = item["id"]
-            break
+    downloaded = 0
+    updated = 0
+    skipped = 0
 
-    if not folder_id:
-        print(" No se encontró la carpeta FACTURAS_2026 en el root.")
-        print("Carpetas/archivos vistos en root:")
-        for it in root_items:
-            print("-", it.get("name"))
-        raise SystemExit(1)
+    for item in excel_items:
+        file_name = item["name"]
+        print(f"Procesando archivo: {file_name}")
 
-    print(" Carpeta encontrada. ID:", folder_id)
+        try:
+            content = download_file_content(item, headers)
+            downloaded += 1
 
-    # URL hijos de la carpeta
-    children_url = f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}/children"
+            changed, status = save_if_changed(file_name, content)
 
-    print("3) Listando archivos dentro de FACTURAS_2026 (con paginación si aplica)...")
-    files = get_all_children(children_url, headers)
+            if changed:
+                updated += 1
+            else:
+                skipped += 1
 
-    print(f"Items encontrados en carpeta: {len(files)}")
+            print(f"Resultado: {file_name} -> {status}")
 
-    # Ruta local
-    base_path = os.path.dirname(os.path.dirname(__file__))  # ...\REPORTE
-    download_path = os.path.join(base_path, "data_raw")
-    os.makedirs(download_path, exist_ok=True)
+        except Exception as e:
+            print(f"ERROR descargando {file_name}: {e}")
+            raise
 
-    print("4) Descargando .xlsx ...")
-    descargados = 0
-
-    for f in files:
-        name = f.get("name", "")
-
-        # solo archivos excel
-        if not name.lower().endswith(".xlsx"):
-            continue
-
-        # @microsoft.graph.downloadUrl puede no venir si no es archivo
-        download_url = f.get("@microsoft.graph.downloadUrl")
-        if not download_url:
-            continue
-
-        file_path = os.path.join(download_path, name)
-        print(f" - Descargando {name}...")
-
-        rr = requests.get(download_url, timeout=120)
-        if rr.status_code != 200:
-            print(f"    No se pudo descargar {name}. Status={rr.status_code}")
-            continue
-
-        with open(file_path, "wb") as out:
-            out.write(rr.content)
-
-        descargados += 1
-
-    print(f" Descarga completada. Archivos .xlsx descargados: {descargados}")
-    print("Carpeta local:", download_path)
+    print("\nRESUMEN DESCARGA")
+    print(f"Carpeta local: {DATA_RAW_DIR}")
+    print(f"Archivos descargados leidos: {downloaded}")
+    print(f"Archivos actualizados: {updated}")
+    print(f"Archivos sin cambios: {skipped}")
 
 
 if __name__ == "__main__":
