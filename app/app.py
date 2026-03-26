@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import streamlit as st
 
-from utils.loaders import load_facturas_externas, load_facturas_vencidas, get_last_update_externas
+from utils.loaders import (
+    load_facturas_externas,
+    load_facturas_vencidas,
+    get_last_update_externas,
+)
 from utils.formatters import (
     format_compact_currency_clp,
     format_number,
@@ -18,9 +22,12 @@ st.set_page_config(
 st.title("Dashboard de Facturación y Cobranza")
 st.caption("Transportes Betancourt | Versión Streamlit")
 
-df_externas = load_facturas_externas()
-df_vencidas = load_facturas_vencidas()
+# FIX CACHÉ: obtener timestamp antes de cargar datos
+# Cuando el parquet cambia → mtime cambia → caché se invalida → datos frescos
 last_update = get_last_update_externas()
+
+df_externas = load_facturas_externas(_mtime=last_update)
+df_vencidas = load_facturas_vencidas(_mtime=get_last_update_externas())
 
 col1, col2, col3, col4 = st.columns(4)
 

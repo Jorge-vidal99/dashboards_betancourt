@@ -5,6 +5,7 @@ import streamlit as st
 from utils.loaders import (
     load_facturas_externas,
     load_facturas_vencidas,
+    get_last_update_externas,
     get_last_update_vencidas,
 )
 from utils.metrics import (
@@ -34,9 +35,10 @@ st.set_page_config(page_title="Gestión de Cobranza", page_icon="💳", layout="
 st.title("Gestión de Cobranza")
 st.caption("Seguimiento de deuda y facturas vencidas")
 
-df_externas = load_facturas_externas().copy()
-df_vencidas = load_facturas_vencidas().copy()
+# FIX CACHÉ: mtime invalida caché automáticamente cuando cambia el parquet
 last_update = get_last_update_vencidas()
+df_externas = load_facturas_externas(_mtime=get_last_update_externas()).copy()
+df_vencidas = load_facturas_vencidas(_mtime=last_update).copy()
 
 # -----------------------------
 # Filtros
@@ -57,18 +59,12 @@ with st.sidebar:
 
     empresas = sorted(df_externas["RAZON_SOCIAL"].dropna().unique().tolist())
     empresas_sel = st.multiselect(
-        "Razón social",
-        empresas,
-        default=empresas,
-        key="cobranza_empresa"
+        "Razón social", empresas, default=empresas, key="cobranza_empresa"
     )
 
     clientes = sorted(df_externas["CLIENTE"].dropna().unique().tolist())
     clientes_sel = st.multiselect(
-        "Cliente",
-        clientes,
-        default=clientes,
-        key="cobranza_cliente"
+        "Cliente", clientes, default=clientes, key="cobranza_cliente"
     )
 
 # -----------------------------
@@ -88,10 +84,7 @@ df_vencidas_filtrado = df_vencidas[
     & df_vencidas["CLIENTE"].isin(clientes_sel)
 ].copy()
 
-# Todas las impagas, incluyendo no vencidas, para aging y semáforo
-df_impagas_filtrado = df_filtrado[
-    df_filtrado["ESTADO"] == "IMPAGA"
-].copy()
+df_impagas_filtrado = df_filtrado[df_filtrado["ESTADO"] == "IMPAGA"].copy()
 
 if df_filtrado.empty:
     st.warning("No hay datos para la combinación de filtros seleccionada.")
@@ -106,9 +99,7 @@ with col_info_1:
     st.markdown("**Sistema de Facturación y Cobranza | Módulo de Gestión de Cobranza**")
 
 with col_info_2:
-    st.markdown(
-        f"**Última actualización:** {format_datetime_update(last_update)}"
-    )
+    st.markdown(f"**Última actualización:** {format_datetime_update(last_update)}")
 
 # -----------------------------
 # KPIs
@@ -116,27 +107,18 @@ with col_info_2:
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.metric(
-        "Monto impago",
-        format_compact_currency_clp(kpi_monto_impago(df_filtrado))
-    )
+    st.metric("Monto impago", format_compact_currency_clp(kpi_monto_impago(df_filtrado)))
 
 with col2:
-    st.metric(
-        "Facturas impagas",
-        format_number(kpi_facturas_impagas(df_filtrado))
-    )
+    st.metric("Facturas impagas", format_number(kpi_facturas_impagas(df_filtrado)))
 
 with col3:
-    st.metric(
-        "Clientes con deuda",
-        format_number(kpi_clientes_con_deuda(df_filtrado))
-    )
+    st.metric("Clientes con deuda", format_number(kpi_clientes_con_deuda(df_filtrado)))
 
 with col4:
     st.metric(
         "Monto vencido > 30 días",
-        format_compact_currency_clp(kpi_monto_vencido(df_vencidas_filtrado))
+        format_compact_currency_clp(kpi_monto_vencido(df_vencidas_filtrado)),
     )
 
 st.markdown("---")
@@ -152,9 +134,7 @@ with col_g1:
 
 with col_g2:
     st.subheader("Aging de facturas impagas")
-
-    df_aging = df_impagas_filtrado.copy()
-    fig_aging = chart_aging_deuda(df_aging)
+    fig_aging = chart_aging_deuda(df_impagas_filtrado.copy())
     st.plotly_chart(fig_aging, width="stretch")
 
 col_g3, col_g4 = st.columns([1.2, 1])
@@ -166,18 +146,20 @@ with col_g3:
 with col_g4:
     st.subheader("Resumen rápido")
     st.write(f"**Registros vencidos:** {format_number(len(df_vencidas_filtrado))}")
-    st.write(
-        f"**Monto promedio por factura vencida:** "
-        f"{format_currency_clp(df_vencidas_filtrado['MONTO'].mean())}"
-        if not df_vencidas_filtrado.empty
-        else "$0"
-    )
-    st.write(
-        f"**Máxima antigüedad:** "
-        f"{format_number(df_vencidas_filtrado['DIAS_TRANSCURRIDOS'].max())} días"
-        if not df_vencidas_filtrado.empty
-        else "0 días"
-    )
+
+    # FIX f-string: el if/else ahora está correctamente dentro del st.write
+    if not df_vencidas_filtrado.empty:
+        st.write(
+            f"**Monto promedio por factura vencida:** "
+            f"{format_currency_clp(df_vencidas_filtrado['MONTO'].mean())}"
+        )
+        st.write(
+            f"**Máxima antigüedad:** "
+            f"{format_number(df_vencidas_filtrado['DIAS_TRANSCURRIDOS'].max())} días"
+        )
+    else:
+        st.write("**Monto promedio por factura vencida:** $0")
+        st.write("**Máxima antigüedad:** 0 días")
 
 st.markdown("---")
 
@@ -216,14 +198,14 @@ if not df_riesgo.empty:
     riesgo_detalle["MONTO_FACTURADO"] = riesgo_detalle["MONTO_FACTURADO"].apply(format_currency_clp)
     riesgo_detalle["MONTO_IMPAGO"] = riesgo_detalle["MONTO_IMPAGO"].apply(format_currency_clp)
     riesgo_detalle["FACTURAS_IMPAGAS"] = riesgo_detalle["FACTURAS_IMPAGAS"].apply(format_number)
-    riesgo_detalle["MAX_DIAS"] = riesgo_detalle["MAX_DIAS"].apply(lambda x: f"{format_number(x)} días")
-    riesgo_detalle["TASA_IMPAGO"] = riesgo_detalle["TASA_IMPAGO"].apply(lambda x: f"{x*100:.2f}%".replace(".", ","))
-
-    st.dataframe(
-        riesgo_detalle,
-        width="stretch",
-        hide_index=True,
+    riesgo_detalle["MAX_DIAS"] = riesgo_detalle["MAX_DIAS"].apply(
+        lambda x: f"{format_number(x)} días"
     )
+    riesgo_detalle["TASA_IMPAGO"] = riesgo_detalle["TASA_IMPAGO"].apply(
+        lambda x: f"{x * 100:.2f}%".replace(".", ",")
+    )
+
+    st.dataframe(riesgo_detalle, width="stretch", hide_index=True)
 
 st.markdown("---")
 

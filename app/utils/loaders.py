@@ -57,53 +57,60 @@ def _prepare_dates(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # -------------------------------
+# Utilidades de timestamp
+# -------------------------------
+def get_data_file_timestamp(file_name: str) -> float:
+    path = DATA_DIR / file_name
+    if not path.exists():
+        return 0.0
+    return path.stat().st_mtime
+
+
+def get_last_update_externas() -> float:
+    return get_data_file_timestamp("facturas_externas.parquet")
+
+
+def get_last_update_vencidas() -> float:
+    return get_data_file_timestamp("facturas_vencidas_impagas.parquet")
+
+
+# -------------------------------
 # Loaders principales
+# FIX CACHÉ: el parámetro _mtime actúa como clave de caché.
+# Cuando el archivo cambia → mtime cambia → Streamlit recarga los datos.
+# El guion bajo (_mtime) le dice a Streamlit que NO hashee el valor,
+# sino que lo use directamente como discriminador de caché.
 # -------------------------------
 @st.cache_data(show_spinner=False)
-def load_facturas_externas() -> pd.DataFrame:
+def load_facturas_externas(_mtime: float = 0.0) -> pd.DataFrame:
     path = DATA_DIR / "facturas_externas.parquet"
     df = pd.read_parquet(path)
     return _prepare_dates(df)
 
 
 @st.cache_data(show_spinner=False)
-def load_facturas_vencidas() -> pd.DataFrame:
+def load_facturas_vencidas(_mtime: float = 0.0) -> pd.DataFrame:
     path = DATA_DIR / "facturas_vencidas_impagas.parquet"
     df = pd.read_parquet(path)
     return _prepare_dates(df)
 
 
 @st.cache_data(show_spinner=False)
-def load_facturas_intercompany() -> pd.DataFrame:
+def load_facturas_intercompany(_mtime: float = 0.0) -> pd.DataFrame:
     path = DATA_DIR / "facturas_intercompany.parquet"
     df = pd.read_parquet(path)
     return _prepare_dates(df)
 
 
 @st.cache_data(show_spinner=False)
-def load_facturas_consolidadas() -> pd.DataFrame:
+def load_facturas_consolidadas(_mtime: float = 0.0) -> pd.DataFrame:
     path = DATA_DIR / "facturas_consolidadas_todas.parquet"
     df = pd.read_parquet(path)
     return _prepare_dates(df)
 
 
 # -------------------------------
-# Utilidades de actualización
+# Utilidad para limpiar caché manualmente
 # -------------------------------
 def clear_cache() -> None:
     st.cache_data.clear()
-
-
-def get_data_file_timestamp(file_name: str):
-    path = DATA_DIR / file_name
-    if not path.exists():
-        return None
-    return path.stat().st_mtime
-
-
-def get_last_update_externas():
-    return get_data_file_timestamp("facturas_externas.parquet")
-
-
-def get_last_update_vencidas():
-    return get_data_file_timestamp("facturas_vencidas_impagas.parquet")

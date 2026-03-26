@@ -23,7 +23,7 @@ from utils.formatters import (
     format_number,
     format_date_ddmmyyyy,
     format_datetime_update,
-    format_percent
+    format_percent,
 )
 
 st.set_page_config(page_title="Resumen Financiero", page_icon="📈", layout="wide")
@@ -31,8 +31,9 @@ st.set_page_config(page_title="Resumen Financiero", page_icon="📈", layout="wi
 st.title("Resumen Financiero")
 st.caption("Visión ejecutiva de facturación externa")
 
-df = load_facturas_externas().copy()
+# FIX CACHÉ: mtime invalida caché automáticamente cuando cambia el parquet
 last_update = get_last_update_externas()
+df = load_facturas_externas(_mtime=last_update).copy()
 
 # -----------------------------
 # Filtros
@@ -78,9 +79,7 @@ with col_info_1:
     st.markdown("**Sistema de Facturación y Cobranza | Transportes Betancourt**")
 
 with col_info_2:
-    st.markdown(
-        f"**Última actualización:** {format_datetime_update(last_update)}"
-    )
+    st.markdown(f"**Última actualización:** {format_datetime_update(last_update)}")
 
 # -----------------------------
 # KPIs
@@ -90,31 +89,32 @@ col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
     st.metric(
         "Facturación externa",
-        format_compact_currency_clp(kpi_facturacion_total(df_filtrado))
+        format_compact_currency_clp(kpi_facturacion_total(df_filtrado)),
     )
 
 with col2:
     st.metric(
         "Facturas externas",
-        format_number(kpi_facturas_totales(df_filtrado))
+        format_number(kpi_facturas_totales(df_filtrado)),
     )
 
 with col3:
     st.metric(
         "Monto impago externo",
-        format_compact_currency_clp(kpi_monto_impago(df_filtrado))
+        format_compact_currency_clp(kpi_monto_impago(df_filtrado)),
     )
 
 with col4:
     st.metric(
         "Facturas impagas externas",
-        format_number(kpi_facturas_impagas(df_filtrado))
+        format_number(kpi_facturas_impagas(df_filtrado)),
     )
+
 with col5:
     st.metric(
         "Tasa de mora",
-        format_percent(kpi_tasa_mora(df_filtrado))
-    )   
+        format_percent(kpi_tasa_mora(df_filtrado)),
+    )
 
 st.markdown("---")
 
@@ -165,8 +165,4 @@ with st.expander("Ver detalle de datos filtrados"):
     detalle["MONTO"] = detalle["MONTO"].apply(format_currency_clp)
     detalle["DIAS_TRANSCURRIDOS"] = detalle["DIAS_TRANSCURRIDOS"].apply(format_number)
 
-    st.dataframe(
-        detalle,
-        width="stretch",
-        hide_index=True,
-    )
+    st.dataframe(detalle, width="stretch", hide_index=True)
