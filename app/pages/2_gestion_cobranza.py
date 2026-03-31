@@ -228,12 +228,15 @@ detalle = df_vencidas_filtrado[
     ]
 ].copy()
 
+# Ordenar ANTES de formatear para que el ordenamiento sea numérico
+detalle = detalle.sort_values(["DIAS_TRANSCURRIDOS"], ascending=[False])
+
 detalle["FECHA_EMISION"] = format_date_ddmmyyyy(detalle["FECHA_EMISION"])
 detalle["MONTO"] = detalle["MONTO"].apply(format_currency_clp)
 detalle["DIAS_TRANSCURRIDOS"] = detalle["DIAS_TRANSCURRIDOS"].apply(format_number)
 
 st.dataframe(
-    detalle.sort_values(["DIAS_TRANSCURRIDOS"], ascending=[False]),
+    detalle,
     width="stretch",
     hide_index=True,
 )

@@ -136,11 +136,8 @@ def main():
 
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
-    if changed_files:
-        save_state(current_state)
-
-    # Si no había baseline, lo tratamos como cambio inicial y guardamos estado
-    if last_state is None:
+    # Guardar estado si hay cambios O si es la primera ejecución
+    if changed_files or last_state is None:
         save_state(current_state)
 
     sys.exit(0)

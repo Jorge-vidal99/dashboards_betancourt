@@ -32,7 +32,7 @@ def kpi_tasa_mora(df):
     facturacion_total = kpi_facturacion_total(df)
     monto_impago = kpi_monto_impago(df)
 
-    if facturacion_total in [0, None]:
+    if facturacion_total <= 0:
         return 0
 
     return monto_impago / facturacion_total
@@ -104,8 +104,11 @@ def resumen_riesgo_clientes(df: pd.DataFrame) -> pd.DataFrame:
 
     resumen = facturado.merge(deuda, on="CLIENTE", how="inner")
 
-    resumen["TASA_IMPAGO"] = resumen["MONTO_IMPAGO"] / resumen["MONTO_FACTURADO"]
-    resumen["TASA_IMPAGO"] = resumen["TASA_IMPAGO"].fillna(0)
+    resumen["TASA_IMPAGO"] = resumen.apply(
+        lambda row: row["MONTO_IMPAGO"] / row["MONTO_FACTURADO"]
+        if row["MONTO_FACTURADO"] > 0 else 0,
+        axis=1
+    )
 
     def clasificar(row):
         if row["MONTO_IMPAGO"] <= 0:

@@ -146,7 +146,7 @@ def main() -> None:
 
         except Exception as e:
             print(f"ERROR descargando {file_name}: {e}")
-            raise
+            # Continuar con el siguiente archivo en lugar de detener
 
     print("\nRESUMEN DESCARGA")
     print(f"Carpeta local: {DATA_RAW_DIR}")

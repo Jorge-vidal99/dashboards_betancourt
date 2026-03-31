@@ -84,29 +84,57 @@ def get_last_update_vencidas() -> float:
 @st.cache_data(show_spinner=False)
 def load_facturas_externas(_mtime: float = 0.0) -> pd.DataFrame:
     path = DATA_DIR / "facturas_externas.parquet"
-    df = pd.read_parquet(path)
-    return _prepare_dates(df)
+    if not path.exists():
+        st.error(f"No se encontró archivo: {path}")
+        return pd.DataFrame()
+    try:
+        df = pd.read_parquet(path)
+        return _prepare_dates(df)
+    except Exception as e:
+        st.error(f"Error cargando {path}: {e}")
+        return pd.DataFrame()
 
 
 @st.cache_data(show_spinner=False)
 def load_facturas_vencidas(_mtime: float = 0.0) -> pd.DataFrame:
     path = DATA_DIR / "facturas_vencidas_impagas.parquet"
-    df = pd.read_parquet(path)
-    return _prepare_dates(df)
+    if not path.exists():
+        st.error(f"No se encontró archivo: {path}")
+        return pd.DataFrame()
+    try:
+        df = pd.read_parquet(path)
+        return _prepare_dates(df)
+    except Exception as e:
+        st.error(f"Error cargando {path}: {e}")
+        return pd.DataFrame()
 
 
 @st.cache_data(show_spinner=False)
 def load_facturas_intercompany(_mtime: float = 0.0) -> pd.DataFrame:
     path = DATA_DIR / "facturas_intercompany.parquet"
-    df = pd.read_parquet(path)
-    return _prepare_dates(df)
+    if not path.exists():
+        st.error(f"No se encontró archivo: {path}")
+        return pd.DataFrame()
+    try:
+        df = pd.read_parquet(path)
+        return _prepare_dates(df)
+    except Exception as e:
+        st.error(f"Error cargando {path}: {e}")
+        return pd.DataFrame()
 
 
 @st.cache_data(show_spinner=False)
 def load_facturas_consolidadas(_mtime: float = 0.0) -> pd.DataFrame:
     path = DATA_DIR / "facturas_consolidadas_todas.parquet"
-    df = pd.read_parquet(path)
-    return _prepare_dates(df)
+    if not path.exists():
+        st.error(f"No se encontró archivo: {path}")
+        return pd.DataFrame()
+    try:
+        df = pd.read_parquet(path)
+        return _prepare_dates(df)
+    except Exception as e:
+        st.error(f"Error cargando {path}: {e}")
+        return pd.DataFrame()
 
 
 # -------------------------------
