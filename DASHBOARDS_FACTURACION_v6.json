@@ -38,7 +38,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\check_onedrive_updates.py\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024\n  });\n  return [{ json: { stdout: stdout, stderr: '', exitCode: 0 } }];\n} catch (error) {\n  throw new Error(JSON.stringify({ stdout: error.stdout || '', stderr: error.stderr || error.message, exitCode: error.status || 1 }));\n}"
+        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\check_onedrive_updates.py\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024\n  });\n  return [{ json: { message: stdout } }];\n} catch (error) {\n  const errorMsg = (error.stderr || error.stdout || error.message || 'Error desconocido').toString();\n  throw new Error(errorMsg);\n}"
       },
       "id": "check-onedrive-remote",
       "name": "check_onedrive_remote",
@@ -71,7 +71,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\download_facturas_2026.py\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024,\n    cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE'\n  });\n  return [{ json: { stdout: stdout, stderr: '', exitCode: 0 } }];\n} catch (error) {\n  throw new Error(JSON.stringify({ stdout: error.stdout || '', stderr: error.stderr || error.message, exitCode: error.status || 1 }));\n}"
+        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\download_facturas_2026.py\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024,\n    cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE'\n  });\n  return [{ json: { message: stdout } }];\n} catch (error) {\n  const errorMsg = (error.stderr || error.stdout || error.message || 'Error desconocido').toString();\n  throw new Error(errorMsg);\n}"
       },
       "id": "download-onedrive",
       "name": "download_onedrive",
@@ -83,7 +83,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\process_facturas.py\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024,\n    cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE'\n  });\n  return [{ json: { stdout: stdout, stderr: '', exitCode: 0 } }];\n} catch (error) {\n  throw new Error(JSON.stringify({ stdout: error.stdout || '', stderr: error.stderr || error.message, exitCode: error.status || 1 }));\n}"
+        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\process_facturas.py\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024,\n    cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE'\n  });\n  return [{ json: { message: stdout } }];\n} catch (error) {\n  const errorMsg = (error.stderr || error.stdout || error.message || 'Error desconocido').toString();\n  throw new Error(errorMsg);\n}"
       },
       "id": "process-facturas",
       "name": "process_facturas",
@@ -95,7 +95,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('cmd /c \"cd /d C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE && git add . && git diff --cached --quiet || (git commit -m auto_refresh && git push)\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024,\n    cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE'\n  });\n  return [{ json: { stdout: stdout, stderr: '', exitCode: 0 } }];\n} catch (error) {\n  throw new Error(JSON.stringify({ stdout: error.stdout || '', stderr: error.stderr || error.message, exitCode: error.status || 1 }));\n}"
+        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('cmd /c \"cd /d C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE && git add . && git diff --cached --quiet || (git commit -m auto_refresh && git push)\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024,\n    cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE'\n  });\n  return [{ json: { message: stdout } }];\n} catch (error) {\n  const errorMsg = (error.stderr || error.stdout || error.message || 'Error desconocido').toString();\n  throw new Error(errorMsg);\n}"
       },
       "id": "git-push",
       "name": "git_push",
