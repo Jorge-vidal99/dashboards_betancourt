@@ -38,7 +38,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\check_onedrive_updates.py\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024\n  });\n  return [{ json: { message: stdout } }];\n} catch (error) {\n  const errorMsg = (error.stderr || error.stdout || error.message || 'Error desconocido').toString();\n  throw new Error(errorMsg);\n}"
+        "jsCode": "const { execSync } = require('child_process');\nconst stdout = execSync(\n  '\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\check_onedrive_updates.py\"',\n  { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 }\n);\nreturn [{ json: { stdout: stdout } }];"
       },
       "id": "check-onedrive-remote",
       "name": "check_onedrive_remote",
@@ -71,7 +71,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\download_facturas_2026.py\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024,\n    cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE'\n  });\n  return [{ json: { message: stdout } }];\n} catch (error) {\n  const errorMsg = (error.stderr || error.stdout || error.message || 'Error desconocido').toString();\n  throw new Error(errorMsg);\n}"
+        "jsCode": "const { execSync } = require('child_process');\nconst stdout = execSync(\n  '\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\download_facturas_2026.py\"',\n  { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE' }\n);\nreturn [{ json: { stdout: stdout } }];"
       },
       "id": "download-onedrive",
       "name": "download_onedrive",
@@ -83,7 +83,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\process_facturas.py\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024,\n    cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE'\n  });\n  return [{ json: { message: stdout } }];\n} catch (error) {\n  const errorMsg = (error.stderr || error.stdout || error.message || 'Error desconocido').toString();\n  throw new Error(errorMsg);\n}"
+        "jsCode": "const { execSync } = require('child_process');\nconst stdout = execSync(\n  '\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\process_facturas.py\"',\n  { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE' }\n);\nreturn [{ json: { stdout: stdout } }];"
       },
       "id": "process-facturas",
       "name": "process_facturas",
@@ -95,7 +95,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const stdout = execSync('cmd /c \"cd /d C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE && git add . && git diff --cached --quiet || (git commit -m auto_refresh && git push)\"', {\n    encoding: 'utf8',\n    maxBuffer: 10 * 1024 * 1024,\n    cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE'\n  });\n  return [{ json: { message: stdout } }];\n} catch (error) {\n  const errorMsg = (error.stderr || error.stdout || error.message || 'Error desconocido').toString();\n  throw new Error(errorMsg);\n}"
+        "jsCode": "const { execSync } = require('child_process');\nconst stdout = execSync(\n  'cmd /c \"cd /d C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE && git add . && git diff --cached --quiet || (git commit -m auto_refresh && git push)\"',\n  { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, cwd: 'C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE' }\n);\nreturn [{ json: { stdout: stdout } }];"
       },
       "id": "git-push",
       "name": "git_push",
@@ -108,7 +108,7 @@
         "sendTo": "facturacion@transportesbetancourt.cl",
         "subject": "✅ [REPORTE] Dashboard actualizado correctamente",
         "emailType": "html",
-        "message": "<h2 style='color:#27ae60'>✅ Pipeline ejecutado con éxito</h2><p>El dashboard de facturación fue actualizado correctamente.</p><p><b>Hora:</b> {{ $now.toISO() }}</p><hr><p>Los datos procesados incluyen las últimas facturas detectadas en OneDrive.</p><hr><p style='color:gray;font-size:12px'>Mensaje generado automáticamente por n8n — Pipeline Facturación Betancourt.</p>",
+        "message": "=<h2 style='color:#27ae60'>✅ Pipeline ejecutado con éxito</h2><p>El dashboard de facturación fue actualizado correctamente.</p><p><b>Hora:</b> {{ $now.toISO() }}</p><hr><p style='color:gray;font-size:12px'>Mensaje generado automáticamente por n8n — Pipeline Facturación Betancourt.</p>",
         "options": {}
       },
       "id": "gmail-exito",
@@ -214,13 +214,9 @@
     }
   },
   "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
+  "settings": {"executionOrder": "v1"},
   "versionId": "07596db0-0bc7-43c5-a595-387d3d0da316",
-  "meta": {
-    "instanceId": "5bd4c4639fd29502b3a9f53f3526f9e24a9aa53bbfed682ed2e9d66b5ff47d84"
-  },
+  "meta": {"instanceId": "5bd4c4639fd29502b3a9f53f3526f9e24a9aa53bbfed682ed2e9d66b5ff47d84"},
   "id": "9fqJ5NfTiNYd2aR3",
   "tags": []
 }
