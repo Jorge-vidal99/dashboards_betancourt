@@ -1,0 +1,439 @@
+﻿{
+    "updatedAt":  "2026-04-06T19:46:11.919Z",
+    "createdAt":  "2026-03-17T16:04:08.259Z",
+    "id":  "9fqJ5NfTiNYd2aR3",
+    "name":  "DASHBOARDS FACTURACIÃ“N",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "hours",
+                                                                           "hoursInterval":  2
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "31f87f5a-4bb7-4304-95ef-bbde5feed1d4",
+                      "name":  "Schedule Trigger1",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       0,
+                                       4976
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "hora-check",
+                                                                                   "leftValue":  "={{ $now.hour \u003e= 9 \u0026\u0026 $now.hour \u003c 18 }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "name":  "filter.operator.true"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "looseTypeValidation":  true,
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "3d8f9b1d-ea3e-4d95-a28a-5af9cb52962e",
+                      "name":  "If1",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       224,
+                                       4976
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const { execSync } = require(\u0027child_process\u0027);\n\ntry {\n  const stdout = execSync(\n    \u0027\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\check_onedrive_updates.py\"\u0027,\n    { \n      encoding: \u0027utf8\u0027, \n      maxBuffer: 10 * 1024 * 1024,\n      timeout: 60000  // 60 segundos mÃ¡ximo\n    }\n  );\n  return [{ json: { stdout: stdout } }];\n} catch (error) {\n  if (error.killed) {\n    throw new Error(\u0027Script Python timeout despuÃ©s de 60s\u0027);\n  }\n  throw error;\n}"
+                                     },
+                      "id":  "a5dd22fa-5c3a-4b86-8cf5-bfbfe82c588c",
+                      "name":  "check_onedrive_remote",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       448,
+                                       4976
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "should-run-check",
+                                                                                   "leftValue":  "={{ JSON.parse($json.stdout.replace(/\\n/g, \u0027\u0027)).should_run }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "name":  "filter.operator.true"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "looseTypeValidation":  true,
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "31d1d9f0-81ba-4772-bfc8-052e1c411afa",
+                      "name":  "If",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       672,
+                                       4976
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const { execSync } = require(\u0027child_process\u0027);\nconst stdout = execSync(\n  \u0027\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\download_facturas_2026.py\"\u0027,\n  { encoding: \u0027utf8\u0027, maxBuffer: 10 * 1024 * 1024, cwd: \u0027C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\u0027 }\n);\nreturn [{ json: { stdout: stdout } }];"
+                                     },
+                      "id":  "a40d2fb7-34d4-4261-87b7-1ed2019cd200",
+                      "name":  "download_onedrive",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       880,
+                                       4816
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const { execSync } = require(\u0027child_process\u0027);\nconst stdout = execSync(\n  \u0027\"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\.venv\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\\\\scripts\\\\process_facturas.py\"\u0027,\n  { encoding: \u0027utf8\u0027, maxBuffer: 10 * 1024 * 1024, cwd: \u0027C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\u0027 }\n);\nreturn [{ json: { stdout: stdout } }];"
+                                     },
+                      "id":  "8c131bb5-7961-4296-b1a4-05dbd745c313",
+                      "name":  "process_facturas",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1104,
+                                       4816
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const { execSync } = require(\u0027child_process\u0027);\nconst stdout = execSync(\n  \u0027cmd /c \"cd /d C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE \u0026\u0026 git add . \u0026\u0026 git diff --cached --quiet || (git commit -m auto_refresh \u0026\u0026 git push)\"\u0027,\n  { encoding: \u0027utf8\u0027, maxBuffer: 10 * 1024 * 1024, cwd: \u0027C:\\\\Users\\\\Pablo\\\\Desktop\\\\REPORTE\u0027 }\n);\nreturn [{ json: { stdout: stdout } }];"
+                                     },
+                      "id":  "a45d10af-aae4-48dd-96ce-5f22ec0ba833",
+                      "name":  "git_push",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1328,
+                                       4816
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "sendTo":  "facturacion@transportesbetancourt.cl",
+                                         "subject":  "âœ… [REPORTE] Dashboard actualizado correctamente",
+                                         "message":  "=\u003ch2 style=\u0027color:#27ae60\u0027\u003eâœ… Pipeline ejecutado con Ã©xito\u003c/h2\u003e\u003cp\u003eEl dashboard de facturaciÃ³n fue actualizado correctamente.\u003c/p\u003e\u003cp\u003e\u003cb\u003eHora:\u003c/b\u003e {{ $now.toISO() }}\u003c/p\u003e\u003chr\u003e\u003cp style=\u0027color:gray;font-size:12px\u0027\u003eMensaje generado automÃ¡ticamente por n8n â€” Pipeline FacturaciÃ³n Betancourt.\u003c/p\u003e",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "36d33798-ec6d-4bfe-af64-3f89c5895c02",
+                      "name":  "EMAIL EXITO",
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1584,
+                                       4656
+                                   ],
+                      "webhookId":  "968a963c-6e57-4e5c-a053-c451ea98a707",
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "B3B9LbI6t748h93i",
+                                                              "name":  "Gmail account"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "sendTo":  "facturacion@transportesbetancourt.cl",
+                                         "subject":  "âš ï¸ [REPORTE] Error al conectar OneDrive",
+                                         "message":  "=\u003ch2 style=\u0027color:#c0392b\u0027\u003eâš ï¸ Error en check_onedrive_remote\u003c/h2\u003e\u003cp\u003e\u003cb\u003eHora:\u003c/b\u003e {{ $now.toISO() }}\u003c/p\u003e\u003chr\u003e\u003cpre style=\u0027background:#f4f4f4;padding:10px\u0027\u003e{{ $json.message || \u0027Sin detalle disponible\u0027 }}\u003c/pre\u003e\u003chr\u003e\u003cp style=\u0027color:gray;font-size:12px\u0027\u003ePipeline FacturaciÃ³n Betancourt.\u003c/p\u003e",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "e954d7b8-14df-473b-bfce-e32456681685",
+                      "name":  "email_error_onedrive",
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       816,
+                                       5472
+                                   ],
+                      "webhookId":  "d042aab2-7be6-4495-95fb-dc4bf61d43be",
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "B3B9LbI6t748h93i",
+                                                              "name":  "Gmail account"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "sendTo":  "facturacion@transportesbetancourt.cl",
+                                         "subject":  "âš ï¸ [REPORTE] Error al descargar facturas",
+                                         "message":  "=\u003ch2 style=\u0027color:#c0392b\u0027\u003eâš ï¸ Error en download_onedrive\u003c/h2\u003e\u003cp\u003e\u003cb\u003eHora:\u003c/b\u003e {{ $now.toISO() }}\u003c/p\u003e\u003chr\u003e\u003cpre style=\u0027background:#f4f4f4;padding:10px\u0027\u003e{{ $json.message || \u0027Sin detalle disponible\u0027 }}\u003c/pre\u003e\u003chr\u003e\u003cp style=\u0027color:gray;font-size:12px\u0027\u003ePipeline FacturaciÃ³n Betancourt.\u003c/p\u003e",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "518fb4d5-acb3-42ec-bea8-8d547b7afa90",
+                      "name":  "email_error_download",
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1072,
+                                       5168
+                                   ],
+                      "webhookId":  "12fb5afb-c1e1-4bae-b642-16ccadcef19b",
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "B3B9LbI6t748h93i",
+                                                              "name":  "Gmail account"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "sendTo":  "facturacion@transportesbetancourt.cl",
+                                         "subject":  "âš ï¸ [REPORTE] Error al procesar facturas",
+                                         "message":  "=\u003ch2 style=\u0027color:#c0392b\u0027\u003eâš ï¸ Error en process_facturas\u003c/h2\u003e\u003cp\u003e\u003cb\u003eHora:\u003c/b\u003e {{ $now.toISO() }}\u003c/p\u003e\u003chr\u003e\u003cpre style=\u0027background:#f4f4f4;padding:10px\u0027\u003e{{ $json.message || \u0027Sin detalle disponible\u0027 }}\u003c/pre\u003e\u003chr\u003e\u003cp style=\u0027color:gray;font-size:12px\u0027\u003ePipeline FacturaciÃ³n Betancourt.\u003c/p\u003e",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "ba7b84b2-0cbc-4731-903a-8fdb08966576",
+                      "name":  "email_error_process",
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1440,
+                                       5376
+                                   ],
+                      "webhookId":  "7d8b4977-6cc0-431e-beb4-1e32f4f7b2c1",
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "B3B9LbI6t748h93i",
+                                                              "name":  "Gmail account"
+                                                          }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "sendTo":  "facturacion@transportesbetancourt.cl",
+                                         "subject":  "âš ï¸ [REPORTE] Error en git push â€” Streamlit no se actualizÃ³",
+                                         "message":  "=\u003ch2 style=\u0027color:#c0392b\u0027\u003eâš ï¸ Error en git_push\u003c/h2\u003e\u003cp\u003e\u003cb\u003eHora:\u003c/b\u003e {{ $now.toISO() }}\u003c/p\u003e\u003chr\u003e\u003cpre style=\u0027background:#f4f4f4;padding:10px\u0027\u003e{{ $json.message || \u0027Sin detalle disponible\u0027 }}\u003c/pre\u003e\u003chr\u003e\u003cp style=\u0027color:gray;font-size:12px\u0027\u003ePipeline FacturaciÃ³n Betancourt.\u003c/p\u003e",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "7659ad77-cee7-4a90-9636-bdbfaece956d",
+                      "name":  "email_error_git",
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       1632,
+                                       5120
+                                   ],
+                      "webhookId":  "d1c61585-b652-472d-9a92-7d799fdfd718",
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "B3B9LbI6t748h93i",
+                                                              "name":  "Gmail account"
+                                                          }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "Schedule Trigger1":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "If1",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "If1":  {
+                                    "main":  [
+                                                 [
+                                                     {
+                                                         "node":  "check_onedrive_remote",
+                                                         "type":  "main",
+                                                         "index":  0
+                                                     }
+                                                 ]
+                                             ]
+                                },
+                        "check_onedrive_remote":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "If",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "If":  {
+                                   "main":  [
+                                                [
+                                                    {
+                                                        "node":  "download_onedrive",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ],
+                                                [
+                                                    {
+                                                        "node":  "email_error_onedrive",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ]
+                                            ]
+                               },
+                        "download_onedrive":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "process_facturas",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   },
+                                                                   {
+                                                                       "node":  "email_error_download",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "process_facturas":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "git_push",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  },
+                                                                  {
+                                                                      "node":  "email_error_process",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "git_push":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "EMAIL EXITO",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          },
+                                                          {
+                                                              "node":  "email_error_git",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate",
+                     "timeSavedMode":  "fixed",
+                     "timezone":  "America/Santiago",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  {
+                       "node:Schedule Trigger":  {
+                                                     "recurrenceRules":  [
+
+                                                                         ]
+                                                 },
+                       "node:Schedule Trigger1":  {
+                                                      "recurrenceRules":  [
+                                                                              16
+                                                                          ]
+                                                  }
+                   },
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "pinData":  {
+
+                },
+    "versionId":  "a56e60c6-5d33-40d2-98a7-14a17c69ce5b",
+    "activeVersionId":  "a56e60c6-5d33-40d2-98a7-14a17c69ce5b",
+    "versionCounter":  416,
+    "triggerCount":  1,
+    "tags":  [
+
+             ],
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-03-17T16:04:08.278Z",
+                       "createdAt":  "2026-03-17T16:04:08.278Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "9fqJ5NfTiNYd2aR3",
+                       "projectId":  "bUR4CUTQO8kscwOn",
+                       "project":  {
+                                       "updatedAt":  "2026-01-07T12:30:50.391Z",
+                                       "createdAt":  "2026-01-07T12:28:05.465Z",
+                                       "id":  "bUR4CUTQO8kscwOn",
+                                       "name":  "Jorge Vidal Larrondo \u003cjorge.vidalarro@gmail.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "a3eefba9-a738-4fd4-b601-7c4cd54c28a5"
+                                   }
+                   }
+               ],
+    "versionMetadata":  {
+                            "name":  "Version a56e60c6",
+                            "description":  ""
+                        }
+}
