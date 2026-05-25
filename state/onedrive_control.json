@@ -2,9 +2,9 @@
   "state": {
     "FACTURAS_CLAUDIO_2026.xlsx": {
       "id": "4BD3C2E260EF6061!sf105fb06516b4f54854a837f52c390ec",
-      "size": 80471,
-      "lastModifiedDateTime": "2026-05-20T20:58:01Z",
-      "eTag": "\"{F105FB06-516B-4F54-854A-837F52C390EC},1017\""
+      "size": 80518,
+      "lastModifiedDateTime": "2026-05-25T14:04:05Z",
+      "eTag": "\"{F105FB06-516B-4F54-854A-837F52C390EC},1018\""
     },
     "FACTURAS_EDUARDO_2026.xlsx": {
       "id": "4BD3C2E260EF6061!s965f1ca2f0a64ff08e664e91ce77c010",
@@ -14,9 +14,9 @@
     },
     "FACTURAS_TBH_2026.xlsx": {
       "id": "4BD3C2E260EF6061!sc608a92ada224b88a8b5d2f6f159cbeb",
-      "size": 46030,
-      "lastModifiedDateTime": "2026-05-20T20:08:28Z",
-      "eTag": "\"{C608A92A-DA22-4B88-A8B5-D2F6F159CBEB},666\""
+      "size": 45980,
+      "lastModifiedDateTime": "2026-05-25T13:21:06Z",
+      "eTag": "\"{C608A92A-DA22-4B88-A8B5-D2F6F159CBEB},667\""
     }
   }
 }
