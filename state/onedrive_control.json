@@ -2,21 +2,21 @@
   "state": {
     "FACTURAS_CLAUDIO_2026.xlsx": {
       "id": "4BD3C2E260EF6061!sf105fb06516b4f54854a837f52c390ec",
-      "size": 82376,
-      "lastModifiedDateTime": "2026-06-03T21:40:24Z",
-      "eTag": "\"{F105FB06-516B-4F54-854A-837F52C390EC},1044\""
+      "size": 82405,
+      "lastModifiedDateTime": "2026-06-08T14:07:19Z",
+      "eTag": "\"{F105FB06-516B-4F54-854A-837F52C390EC},1045\""
     },
     "FACTURAS_EDUARDO_2026.xlsx": {
       "id": "4BD3C2E260EF6061!s965f1ca2f0a64ff08e664e91ce77c010",
-      "size": 55607,
-      "lastModifiedDateTime": "2026-06-03T21:32:30Z",
-      "eTag": "\"{965F1CA2-F0A6-4FF0-8E66-4E91CE77C010},815\""
+      "size": 55627,
+      "lastModifiedDateTime": "2026-06-08T13:45:13Z",
+      "eTag": "\"{965F1CA2-F0A6-4FF0-8E66-4E91CE77C010},816\""
     },
     "FACTURAS_TBH_2026.xlsx": {
       "id": "4BD3C2E260EF6061!sc608a92ada224b88a8b5d2f6f159cbeb",
-      "size": 46072,
-      "lastModifiedDateTime": "2026-06-02T15:14:16Z",
-      "eTag": "\"{C608A92A-DA22-4B88-A8B5-D2F6F159CBEB},679\""
+      "size": 46128,
+      "lastModifiedDateTime": "2026-06-08T14:38:13Z",
+      "eTag": "\"{C608A92A-DA22-4B88-A8B5-D2F6F159CBEB},681\""
     }
   }
 }
