@@ -138,15 +138,8 @@ with col_g2:
     fig_aging = chart_aging_deuda(df_impagas_filtrado.copy())
     st.plotly_chart(fig_aging, use_container_width=True)
 
-col_g3, col_g4 = st.columns([1.2, 1])
-
-with col_g3:
-    fig_empresa = chart_deuda_por_empresa(df_vencidas_filtrado)
-    st.plotly_chart(fig_empresa, use_container_width=True)
-
-with col_g4:
-    fig_empresa_impagas = chart_deuda_por_empresa(df_impagas_filtrado)
-    st.plotly_chart(fig_empresa_impagas, use_container_width=True)
+fig_empresa = chart_deuda_por_empresa(df_vencidas_filtrado)
+st.plotly_chart(fig_empresa, use_container_width=True)
 
 st.markdown("---")
 
