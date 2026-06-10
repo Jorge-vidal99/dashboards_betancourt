@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from utils.loaders import (
@@ -130,36 +131,22 @@ col_g1, col_g2 = st.columns([1.1, 1])
 
 with col_g1:
     fig_morosos = chart_top_clientes_morosos(df_vencidas_filtrado, top_n=10)
-    st.plotly_chart(fig_morosos, width="stretch")
+    st.plotly_chart(fig_morosos, use_container_width=True)
 
 with col_g2:
     st.subheader("Aging de facturas impagas")
     fig_aging = chart_aging_deuda(df_impagas_filtrado.copy())
-    st.plotly_chart(fig_aging, width="stretch")
+    st.plotly_chart(fig_aging, use_container_width=True)
 
 col_g3, col_g4 = st.columns([1.2, 1])
 
 with col_g3:
     fig_empresa = chart_deuda_por_empresa(df_vencidas_filtrado)
-    st.plotly_chart(fig_empresa, width="stretch")
+    st.plotly_chart(fig_empresa, use_container_width=True)
 
 with col_g4:
-    st.subheader("Resumen rápido")
-    st.write(f"**Registros vencidos:** {format_number(len(df_vencidas_filtrado))}")
-
-    # FIX f-string: el if/else ahora está correctamente dentro del st.write
-    if not df_vencidas_filtrado.empty:
-        st.write(
-            f"**Monto promedio por factura vencida:** "
-            f"{format_currency_clp(df_vencidas_filtrado['MONTO'].mean())}"
-        )
-        st.write(
-            f"**Máxima antigüedad:** "
-            f"{format_number(df_vencidas_filtrado['DIAS_TRANSCURRIDOS'].max())} días"
-        )
-    else:
-        st.write("**Monto promedio por factura vencida:** $0")
-        st.write("**Máxima antigüedad:** 0 días")
+    fig_empresa_impagas = chart_deuda_por_empresa(df_impagas_filtrado)
+    st.plotly_chart(fig_empresa_impagas, use_container_width=True)
 
 st.markdown("---")
 
@@ -174,11 +161,11 @@ col_r1, col_r2 = st.columns([1, 1.2])
 
 with col_r1:
     fig_riesgo = chart_resumen_riesgo_clientes(df_riesgo)
-    st.plotly_chart(fig_riesgo, width="stretch")
+    st.plotly_chart(fig_riesgo, use_container_width=True)
 
 with col_r2:
     fig_criticos = chart_top_clientes_criticos(df_riesgo, top_n=10)
-    st.plotly_chart(fig_criticos, width="stretch")
+    st.plotly_chart(fig_criticos, use_container_width=True)
 
 if not df_riesgo.empty:
     st.markdown("### Detalle de clientes por riesgo")
@@ -205,7 +192,7 @@ if not df_riesgo.empty:
         lambda x: f"{x * 100:.2f}%".replace(".", ",")
     )
 
-    st.dataframe(riesgo_detalle, width="stretch", hide_index=True)
+    st.dataframe(riesgo_detalle, use_container_width=True, hide_index=True)
 
 st.markdown("---")
 
@@ -231,12 +218,27 @@ detalle = df_vencidas_filtrado[
 # Ordenar ANTES de formatear para que el ordenamiento sea numérico
 detalle = detalle.sort_values(["DIAS_TRANSCURRIDOS"], ascending=[False])
 
+
+def _clasificar_urgencia(dias):
+    if pd.isna(dias):
+        return ""
+    if dias > 90:
+        return "🔴 Crítico"
+    if dias > 60:
+        return "🟡 Alerta"
+    if dias > 30:
+        return "🟠 Atención"
+    return ""
+
+
+detalle["URGENCIA"] = detalle["DIAS_TRANSCURRIDOS"].apply(_clasificar_urgencia)
+
 detalle["FECHA_EMISION"] = format_date_ddmmyyyy(detalle["FECHA_EMISION"])
 detalle["MONTO"] = detalle["MONTO"].apply(format_currency_clp)
 detalle["DIAS_TRANSCURRIDOS"] = detalle["DIAS_TRANSCURRIDOS"].apply(format_number)
 
 st.dataframe(
     detalle,
-    width="stretch",
+    use_container_width=True,
     hide_index=True,
 )

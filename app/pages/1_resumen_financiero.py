@@ -16,6 +16,7 @@ from utils.charts import (
     chart_top_clientes,
     chart_facturacion_por_empresa,
     chart_estado,
+    chart_evolucion_mora,
 )
 from utils.formatters import (
     format_compact_currency_clp,
@@ -42,7 +43,7 @@ with st.sidebar:
     st.header("Filtros")
 
     anios = sorted(df["anio"].dropna().astype(int).unique().tolist())
-    anios_sel = st.multiselect("Año", anios, default=anios)
+    anios_sel = st.multiselect("Año", anios, default=anios, key="resumen_anio")
 
     meses_ordenados = (
         df[["mes_num", "mes_nombre"]]
@@ -50,16 +51,22 @@ with st.sidebar:
         .sort_values("mes_num")
     )
     meses = meses_ordenados["mes_nombre"].tolist()
-    meses_sel = st.multiselect("Mes", meses, default=meses)
+    meses_sel = st.multiselect("Mes", meses, default=meses, key="resumen_mes")
 
     empresas = sorted(df["RAZON_SOCIAL"].dropna().unique().tolist())
-    empresas_sel = st.multiselect("Razón social", empresas, default=empresas)
+    empresas_sel = st.multiselect(
+        "Razón social", empresas, default=empresas, key="resumen_empresa"
+    )
 
     estados = sorted(df["ESTADO"].dropna().unique().tolist())
-    estados_sel = st.multiselect("Estado", estados, default=estados)
+    estados_sel = st.multiselect(
+        "Estado", estados, default=estados, key="resumen_estado"
+    )
 
     clientes = sorted(df["CLIENTE"].dropna().unique().tolist())
-    clientes_sel = st.multiselect("Cliente", clientes, default=clientes)
+    clientes_sel = st.multiselect(
+        "Cliente", clientes, default=clientes, key="resumen_cliente"
+    )
 
 # Aplicar filtros
 df_filtrado = df[
@@ -84,12 +91,27 @@ with col_info_2:
 # -----------------------------
 # KPIs
 # -----------------------------
+# Delta facturación: mes actual vs mes anterior dentro del filtro
+_mensual = (
+    df_filtrado.groupby("anio_mes", as_index=False)["MONTO"]
+    .sum()
+    .sort_values("anio_mes")
+)
+delta_facturacion_str = None
+if len(_mensual) >= 2:
+    monto_actual = _mensual["MONTO"].iloc[-1]
+    monto_previo = _mensual["MONTO"].iloc[-2]
+    if monto_previo > 0:
+        delta_pct = (monto_actual - monto_previo) / monto_previo * 100
+        delta_facturacion_str = f"{delta_pct:+.1f}% vs mes anterior".replace(".", ",")
+
 col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
     st.metric(
         "Facturación externa",
         format_compact_currency_clp(kpi_facturacion_total(df_filtrado)),
+        delta=delta_facturacion_str,
     )
 
 with col2:
@@ -125,21 +147,24 @@ col_g1, col_g2 = st.columns([1.6, 1])
 
 with col_g1:
     fig_mensual = chart_facturacion_mensual(df_filtrado)
-    st.plotly_chart(fig_mensual, width="stretch")
+    st.plotly_chart(fig_mensual, use_container_width=True)
 
 with col_g2:
     fig_estado = chart_estado(df_filtrado)
-    st.plotly_chart(fig_estado, width="stretch")
+    st.plotly_chart(fig_estado, use_container_width=True)
 
 col_g3, col_g4 = st.columns([1.3, 1])
 
 with col_g3:
     fig_clientes = chart_top_clientes(df_filtrado, top_n=10)
-    st.plotly_chart(fig_clientes, width="stretch")
+    st.plotly_chart(fig_clientes, use_container_width=True)
 
 with col_g4:
     fig_empresa = chart_facturacion_por_empresa(df_filtrado)
-    st.plotly_chart(fig_empresa, width="stretch")
+    st.plotly_chart(fig_empresa, use_container_width=True)
+
+fig_mora = chart_evolucion_mora(df_filtrado)
+st.plotly_chart(fig_mora, use_container_width=True)
 
 st.markdown("---")
 
@@ -165,4 +190,4 @@ with st.expander("Ver detalle de datos filtrados"):
     detalle["MONTO"] = detalle["MONTO"].apply(format_currency_clp)
     detalle["DIAS_TRANSCURRIDOS"] = detalle["DIAS_TRANSCURRIDOS"].apply(format_number)
 
-    st.dataframe(detalle, width="stretch", hide_index=True)
+    st.dataframe(detalle, use_container_width=True, hide_index=True)

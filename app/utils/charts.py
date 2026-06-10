@@ -4,12 +4,15 @@ import pandas as pd
 import plotly.express as px
 
 
-COLOR_PRINCIPAL = "#1F4E79"
+COLOR_PRINCIPAL = "#1A3E8C"
+COLOR_AZUL_MEDIO = "#2563C8"
+COLOR_AZUL_CLARO = "#4A9EE8"
+COLOR_AZUL_OSCURO = "#0D2657"
 COLOR_IMPAGO = "#C62828"
 COLOR_PAGADA = "#2E7D32"
 COLOR_NULA = "#6C757D"
 
-TEMPLATE = "plotly_dark"
+TEMPLATE = "plotly_white"
 
 
 def chart_facturacion_mensual(df: pd.DataFrame):
@@ -310,5 +313,41 @@ def chart_top_clientes_criticos(df_resumen: pd.DataFrame, top_n: int = 10):
         template=TEMPLATE,
         height=420,
         yaxis={"categoryorder": "total ascending"},
+    )
+    return fig
+
+
+def chart_evolucion_mora(df: pd.DataFrame):
+    impagas = df[df["ESTADO"] == "IMPAGA"].copy()
+
+    if impagas.empty:
+        fig = px.line(title="Evolución del monto impago por mes")
+        fig.update_layout(template=TEMPLATE, height=380)
+        return fig
+
+    plot_df = (
+        impagas.groupby("anio_mes", as_index=False)["MONTO"]
+        .sum()
+        .sort_values("anio_mes")
+    )
+
+    fig = px.line(
+        plot_df,
+        x="anio_mes",
+        y="MONTO",
+        title="Evolución del monto impago por mes",
+        markers=True,
+        text=plot_df["MONTO"].apply(lambda v: f"${v/1_000_000:.1f}M"),
+    )
+    fig.update_traces(
+        line_color=COLOR_IMPAGO,
+        marker=dict(color=COLOR_IMPAGO, size=9),
+        textposition="top center",
+    )
+    fig.update_layout(
+        xaxis_title="Año-Mes",
+        yaxis_title="Monto impago",
+        template=TEMPLATE,
+        height=380,
     )
     return fig
