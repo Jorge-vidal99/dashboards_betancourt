@@ -91,27 +91,12 @@ with col_info_2:
 # -----------------------------
 # KPIs
 # -----------------------------
-# Delta facturación: mes actual vs mes anterior dentro del filtro
-_mensual = (
-    df_filtrado.groupby("anio_mes", as_index=False)["MONTO"]
-    .sum()
-    .sort_values("anio_mes")
-)
-delta_facturacion_str = None
-if len(_mensual) >= 2:
-    monto_actual = _mensual["MONTO"].iloc[-1]
-    monto_previo = _mensual["MONTO"].iloc[-2]
-    if monto_previo > 0:
-        delta_pct = (monto_actual - monto_previo) / monto_previo * 100
-        delta_facturacion_str = f"{delta_pct:+.1f}% vs mes anterior".replace(".", ",")
-
 col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
     st.metric(
         "Facturación externa",
         format_compact_currency_clp(kpi_facturacion_total(df_filtrado)),
-        delta=delta_facturacion_str,
     )
 
 with col2:

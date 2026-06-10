@@ -41,11 +41,12 @@ def format_datetime_update(value) -> str:
     if value is None or pd.isna(value):
         return "-"
 
-    ts = pd.to_datetime(value, unit="s", errors="coerce")
+    ts = pd.to_datetime(value, unit="s", utc=True, errors="coerce")
 
     if pd.isna(ts):
         return "-"
 
+    ts = ts.tz_convert("America/Santiago")
     return ts.strftime("%d-%m-%Y %H:%M")
 
 def format_percent(value: float | int | None) -> str:
